@@ -44,14 +44,22 @@ sherlock_signature(PyObject *self, PyObject *args)
     return list;
 }
 
-static PyMethodDef SherlockMethods[] = {
+static PyMethodDef module_methods[] = {
     {"signature",  sherlock_signature, METH_VARARGS,
      "Create a signature from file."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-PyMODINIT_FUNC
-initsherlock(void)
+static struct PyModuleDef sherlock =
 {
-    (void) Py_InitModule("sherlock", SherlockMethods);
+    PyModuleDef_HEAD_INIT,
+    "sherlock", /* name of module */
+    "Plagiarism detection algorithm",          /* module documentation, may be NULL */
+    -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    module_methods
+};
+
+PyMODINIT_FUNC PyInit_sherlock(void)
+{
+    return PyModule_Create(&sherlock);
 }
