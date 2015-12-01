@@ -1,11 +1,17 @@
 import lmdb, json
+from io import StringIO, BytesIO
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from db.plagdb import PlagDB, PlagReference
 
 class LmdbPlagDB(PlagDB):
 
     def __init__(self, file):
-        self.db = lmdb.open(file, map_size=2000*1000*1000)
+        self.db = lmdb.open(file, map_size=4000*1000*1000)
 
     def __del__(self):
         if self.db is not None:
@@ -21,17 +27,20 @@ class LmdbPlagDB(PlagDB):
         return json.loads(data.decode("ascii"))
 
     def update_batch(self, sig, reference):
-        with self.db.begin(write=True) as txn:
+        with self.db.begin(write=True, buffers=True) as txn:
+
+            file = reference.filename
 
             for _hash in sig:
-                hash = str(_hash)
-                existing = txn.get(hash.encode("ascii"))
+                hash = str(_hash).encode("ascii")
+                buf = txn.get(hash)
 
-                file = reference.filename
+                io = BytesIO(buf)
 
                 ref_list = None
-                if existing is not None:
-                    ref_list = json.loads(existing.decode("ascii"))
+                if buf is not None:
+
+                    ref_list = pickle.load(io)
                     if file in ref_list:
                         ref_list[file] += 1
                     else:
@@ -40,9 +49,9 @@ class LmdbPlagDB(PlagDB):
                     ref_list = dict()
                     ref_list[file] = 1
 
-                data = json.dumps(ref_list)
+                pickle.dump(ref_list, io)
 
-                txn.put(hash.encode("ascii"), data.encode("ascii"))
+                txn.put(hash, data.encode("ascii"))
 
 
     def update(self, hash, reference):
