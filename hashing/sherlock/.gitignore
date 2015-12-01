@@ -1,0 +1,5 @@
+.venv
+.idea
+build
+db.json
+sherlock.cpython-34m.so
