@@ -1,0 +1,2 @@
+# plagcheck
+Plagiarism detection daemon
